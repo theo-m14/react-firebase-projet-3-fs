@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ConnectModal from "./styles/components/ConnectModal";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "./utils/firebase.config";
+import { auth, db } from "./utils/firebase.config";
 import CreatePost from "./styles/components/CreatePost";
+import { collection, getDocs } from "firebase/firestore";
+import Post from "./styles/components/Post";
 
 function App() {
   const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState([]);
 
   onAuthStateChanged(auth, (currentUser) => {
     setUser(currentUser);
@@ -14,6 +17,12 @@ function App() {
   const handleLogout = async () => {
     await signOut(auth);
   };
+
+  useEffect(() => {
+    getDocs(collection(db, "posts")).then((res) =>
+      setPosts(res.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+    );
+  }, []);
 
   return (
     <div>
@@ -27,9 +36,18 @@ function App() {
             </button>
           </div>
         )}
-        {user ? <CreatePost /> : <ConnectModal />}
+        {user ? (
+          <CreatePost userUid={user.uid} userDisplayName={user.displayName} />
+        ) : (
+          <ConnectModal />
+        )}
       </div>
-      <div className="posts-container"></div>
+      <div className="posts-container">
+        {posts.length > 0 &&
+          posts
+            .sort((a, b) => b.date - a.date)
+            .map((post) => <Post post={post} key={post.id} user={user} />)}
+      </div>
     </div>
   );
 }
