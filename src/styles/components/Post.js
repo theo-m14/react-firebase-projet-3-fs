@@ -1,4 +1,4 @@
-import { collection, doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import { db } from "../../utils/firebase.config";
 import CommentPost from "./CommentPost";
@@ -25,12 +25,8 @@ const Post = ({ post, user }) => {
   const handleEdit = () => {
     setToggleEdit(false);
 
-    try {
-      if (editMess) {
-        updateDoc(doc(db, "posts", post.id), { content: editMess });
-      }
-    } catch (e) {
-      console.log(e.message);
+    if (editMess) {
+      updateDoc(doc(db, "posts", post.id), { content: editMess });
     }
   };
 
@@ -69,7 +65,7 @@ const Post = ({ post, user }) => {
           </button>
         </>
       )}
-      <CommentPost post={post} />
+      <CommentPost post={post} user={user} />
     </div>
   );
 };

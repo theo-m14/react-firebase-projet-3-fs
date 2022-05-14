@@ -1,16 +1,13 @@
-import { onAuthStateChanged } from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
-import { useRef, useState } from "react";
-import { auth, db } from "../../utils/firebase.config";
+import { useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addComment } from "../../features/post.slice";
+import { db } from "../../utils/firebase.config";
 import CommentCard from "./CommentCard";
 
-const CommentPost = ({ post }) => {
-  const [user, setUser] = useState(null);
+const CommentPost = ({ post, user }) => {
   const commentMessage = useRef();
-
-  onAuthStateChanged(auth, (currentUser) => {
-    setUser(currentUser);
-  });
+  const dispatch = useDispatch();
 
   const handleSendComment = (e) => {
     e.preventDefault();
@@ -25,7 +22,6 @@ const CommentPost = ({ post }) => {
           content: commentMessage.current.value,
         },
       ];
-      console.log(messageData);
     } else {
       messageData = [
         {
@@ -37,8 +33,19 @@ const CommentPost = ({ post }) => {
     try {
       updateDoc(doc(db, "posts", post.id), {
         comments: messageData,
-      });
-      commentMessage.current.value = "";
+      })
+        .then(() => {
+          dispatch(
+            addComment({
+              commentAuthor: user.displayName,
+              content: commentMessage.current.value,
+              id: post.id,
+            })
+          );
+        })
+        .then(() => {
+          commentMessage.current.value = "";
+        });
     } catch (e) {
       console.log(e.message);
     }

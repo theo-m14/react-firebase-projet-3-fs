@@ -16,7 +16,6 @@ const Login = () => {
         email.current.value,
         password.current.value
       );
-      console.log(user);
     } catch (e) {
       setError(true);
       password.current.value = "";
